@@ -13,15 +13,29 @@ class WLVideo(QObject):
     _deviceIds = []
     _captureDevices = []
     _imageProvider = None
+    _areasOfInterest = [ {
+        "name": "defaultName",
+        "device" : 0,
+        # coordinates (point, width, height) / (point, point)
+        # settings (skew, threshold, ... )
+
+
+    },{ "name": "defaultName2",
+        "device" : 4,
+    }]
 
     def getVideoSources(self) -> list:
         return self._deviceList
 
     def getVideoSourceIds(self) -> list:
         return self._deviceIds
+
+    def getAreasOfInterest(self) -> list:
+        return self._areasOfInterest
     
     videoSources = Property(list, fget=getVideoSources)
     videoSourceIds = Property(list, fget=getVideoSourceIds)
+    areasOfInterest = Property(list, fget=getAreasOfInterest)
 
     def setImageProvider(self, imageProvider):
         self._imageProvider  = imageProvider
@@ -49,7 +63,7 @@ class WLVideo(QObject):
                 videoCapture.release()
             else:
                 if not activate: return
-                videoCapture.open()
+                videoCapture.open(self._deviceIds[index])
         else:
             if not activate: return
             videoCapture = cv2.VideoCapture(self._deviceIds[index])

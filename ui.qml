@@ -10,6 +10,8 @@ import QtQuick.Controls.Material 2.1
 
 import wapoLive.WLVideo
 
+import "."
+
 ApplicationWindow {
     id              : mainWindow
     width           : 1600
@@ -27,12 +29,87 @@ ApplicationWindow {
             SplitView.fillHeight  : true
 
             orientation            : Qt.Horizontal
-
-            Rectangle {
-                id           : leftRect
+            ColumnLayout {
+                id                       : layoutLeftSidebar
                 SplitView.preferredWidth : 400
-                SplitView.fillHeight : true
-                color : "steelblue"
+                SplitView.fillHeight     : true
+                RowLayout {
+                    Layout.fillWidth       : true
+                    Layout.preferredHeight : childrenRect.height
+                    spacing                : 10
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                    }
+
+                    Button {
+                        id: buttonOne
+                        icon.source : Res.iconDelete
+                    }
+                    Button {
+                        id: buttonAdd
+                        icon.source : Res.iconAdd
+                    }
+                } // RowLayout Buttonbar
+
+                ScrollView {
+                    Layout.fillWidth : true
+                    Layout.fillHeight: true
+                    ColumnLayout {
+                        anchors.fill:parent
+                        id: layoutAoi
+
+                        function toggleExpansion(item, expanded) {
+                            item.expanded = !expanded
+                        }
+
+                        Repeater {
+                            model : WLVideo.areasOfInterest
+                            Rectangle {
+                                clip: true
+                                color : "lightgrey"
+                                id                           : rectContainer
+                                Layout.fillWidth             : true
+                                Layout.preferredHeight       : containerHeight
+                                property bool expanded       : true
+                                property int containerHeight : expanded ? 
+                                    childrenRect.height : rectHeader.height
+
+                                Behavior on containerHeight {
+                                    NumberAnimation { duration : 230 }
+                                }
+                                
+                                Rectangle {
+                                    color : rectContainer.expanded ? "pink" : "red"
+                                    id            : rectHeader
+                                    anchors.left  : parent.left
+                                    anchors.right : parent.right
+                                    height        : 48
+                                    MouseArea {
+                                        anchors.fill : parent
+                                        onClicked    : layoutAoi.toggleExpansion(rectContainer, rectContainer.expanded)
+                                    }
+
+                                    Label {
+                                        text: "Device " + modelData.device + "\\" + modelData.name
+                                    }
+                                }
+                                Rectangle {
+                                    color : "blue"
+                                    id            : rectContent
+                                    anchors.top   : rectHeader.bottom
+                                    anchors.left  : parent.left
+                                    anchors.right : parent.right
+                                    height        : 400 // childrenRect.height
+
+                                }
+
+                            } // Rectangle container item
+
+
+                        } // Repeater AoI items
+                    } // ColumnLayout
+                } // ScrollView
             }
 
             ColumnLayout {
@@ -40,21 +117,34 @@ ApplicationWindow {
                 SplitView.fillHeight: true
                 TabBar {
                     id                     : tabbarVideoSource
-                    Layout.preferredWidth  : parent.width - buttonToggle.width
+                    Layout.preferredWidth  : childrenRect.width
                     Layout.preferredHeight : childrenRect.height
                     Repeater {
                         model : WLVideo.videoSources
                         TabButton {
-                            text: qsTr(modelData)
+                            text   : qsTr(modelData)
+                            width  : implicitWidth * 3
+
+                            RoundButton {
+                                anchors.rightMargin : 10
+                                anchors.right       : parent.right
+                                Material.background : Material.Red
+                                text                : "X"
+                                onClicked           : {
+                                    if ( text === "X" ) {
+                                        text = "O"
+                                        Material.background = Material.Green
+                                        WLVideo.toggleVideoSource(index, false)
+                                    } else {
+                                        text = "X"
+                                        Material.background = Material.Red
+                                        WLVideo.toggleVideoSource(index, true)
+                                    }
+                                }
+                            }
+
                         } // repeated TabButton
                     } // Repeater
-                                    Button {
-                        anchors.right: tabbarVideoSource.right
-                        anchors.top: tabbarVideoSource.top
-                        id    : buttonToggle
-                        text: "Toggle Video"
-                        onClicked: WLVideo.toggleVideoSource(tabbarVideoSource.currentIndex, false)
-                    }
 
                 } // TabBar videoSource
 
@@ -93,7 +183,7 @@ ApplicationWindow {
             Layout.alignment: Qt.AlignHCenter
             color: "white"
             font.pointSize: 16
-            text: "Qt for Python"
+            text: "Area for additional information"
             SplitView.preferredHeight: 100
             Material.accent: Material.Green
         } // Bottom Text
